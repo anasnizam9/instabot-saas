@@ -1,0 +1,30 @@
+name: Deploy Production
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-production:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate required secrets
+        run: |
+          if [ -z "${{ secrets.PRODUCTION_DEPLOY_COMMAND }}" ]; then
+            echo "Missing PRODUCTION_DEPLOY_COMMAND secret"
+            exit 1
+          fi
+          if [ -z "${{ secrets.PRODUCTION_HEALTHCHECK_URL }}" ]; then
+            echo "Missing PRODUCTION_HEALTHCHECK_URL secret"
+            exit 1
+          fi
+
+      - name: Run deploy command
+        run: ${{ secrets.PRODUCTION_DEPLOY_COMMAND }}
+
+      - name: Verify production health
+        run: curl -fsS "${{ secrets.PRODUCTION_HEALTHCHECK_URL }}"

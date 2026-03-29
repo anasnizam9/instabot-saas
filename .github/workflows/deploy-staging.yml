@@ -1,0 +1,33 @@
+name: Deploy Staging
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - develop
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate required secrets
+        run: |
+          if [ -z "${{ secrets.STAGING_DEPLOY_COMMAND }}" ]; then
+            echo "Missing STAGING_DEPLOY_COMMAND secret"
+            exit 1
+          fi
+          if [ -z "${{ secrets.STAGING_HEALTHCHECK_URL }}" ]; then
+            echo "Missing STAGING_HEALTHCHECK_URL secret"
+            exit 1
+          fi
+
+      - name: Run deploy command
+        run: ${{ secrets.STAGING_DEPLOY_COMMAND }}
+
+      - name: Verify staging health
+        run: curl -fsS "${{ secrets.STAGING_HEALTHCHECK_URL }}"
